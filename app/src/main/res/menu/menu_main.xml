@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.omdd.gdyb.main.MainActivity">
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_list"
+        android:orderInCategory="100"
+        android:title="文件列表"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_conn"
+        android:orderInCategory="100"
+        android:title="连接FlashAir"
+        app:showAsAction="never" />
+</menu>

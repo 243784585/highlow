@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="CollectionView">
+        <attr name="desc" format="string" />
+        <attr name="Hint" format="string" />
+        <attr name="password" format="boolean"/>
+    </declare-styleable>
+
+</resources>

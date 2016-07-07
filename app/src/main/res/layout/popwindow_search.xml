@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:paddingLeft="12dp"
+        android:orientation="horizontal"
+        android:background="#ffffff"
+        android:gravity="center_vertical">
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="180dp"
+            android:layout_height="25dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:singleLine="true"
+            android:drawablePadding="8dp"
+            android:hint="请输入商家名称"
+            android:textColorHint="#8e8e93"
+            android:textSize="14sp"
+            android:imeOptions="actionSearch"/>
+        <TextView
+            android:id="@+id/tv_cancle"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:text="取消"/>
+
+    </LinearLayout>
+    <View
+        android:id="@+id/space"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#aa000000"/>
+</LinearLayout>

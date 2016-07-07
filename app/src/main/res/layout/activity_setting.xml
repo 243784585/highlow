@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#dddddd"
+    android:orientation="vertical">
+    
+    <com.omdd.gdyb.view.MyHeader
+        android:id="@+id/header"
+        android:layout_marginBottom="40dp"
+        style="@style/header"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2px"
+        android:background="#cccccc"/>
+
+
+    <com.omdd.gdyb.view.CollectionView
+        android:id="@+id/cv_user"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#ffffff"
+        app:desc="三和账号"
+        app:Hint="用于登录后台的账号"/>
+
+    <com.omdd.gdyb.view.CollectionView
+        android:id="@+id/cv_pwd"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#ffffff"
+        app:password="true"
+        app:desc="三和密码"
+        app:Hint="登录后台的密码"/>
+
+
+    <ImageButton
+        android:id="@+id/btn_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@null"
+        android:scaleType="fitXY"
+        android:src="@mipmap/btn_save"/>
+
+</LinearLayout>

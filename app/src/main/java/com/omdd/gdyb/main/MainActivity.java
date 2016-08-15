@@ -38,13 +38,12 @@ public class MainActivity extends BaseActivity {
     private WifiAdmin mWifiAdmin;
     private TextView tv_date,tv_project;
     private SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd");
-    private SimpleDateFormat time = new SimpleDateFormat("HH:mm");
     private TimePickerView pvDate;
 
     private Spinner sp_datatype,sp_testtype,sp_testmethod;
     private String[] dataType = new String[]{"数据文件","波形","图片"};
     private String[] testType = new String[]{"基桩完整性","混凝土强度","钢筋检测","结构尺寸"};
-    private String[] testMethod = new String[]{"超声透射法","低应变法","回弹法","超声回弹综合法","电磁感应法","电磁法","反射波法"};
+    private String[] testMethod = new String[]{"低应变法","超声透射法","回弹法","超声回弹综合法","电磁感应法","电磁法","反射波法"};
 
     final int SCAN = 0x001;
     final int ISCONNECT = 0x002;

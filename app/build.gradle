@@ -18,6 +18,20 @@ android {
     }
     productFlavors {
     }
+    signingConfigs {
+        release {
+            storeFile file('gdyb.jks')
+            storePassword 'hongsuan'
+            keyAlias 'gdyb'
+            keyPassword 'hongsuan'
+        }
+        config {
+            storeFile file('gdyb.jks')
+            storePassword 'hongsuan'
+            keyAlias 'gdyb'
+            keyPassword 'hongsuan'
+        }
+    }
 }
 
 dependencies {

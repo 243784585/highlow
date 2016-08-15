@@ -19,7 +19,7 @@ public class FileDao extends SQLiteOpenHelper {
 	}
 
 	public FileDao(Context context, int version){
-		super(context,"flashair.db",null,version);
+		super(context, "flashair.db", null, version);
 	}
 	//_id,planNo,fileName,localPath,flashAirPath,size,state,fileTime,createTime
 	@Override
@@ -138,7 +138,8 @@ public class FileDao extends SQLiteOpenHelper {
 		SQLiteDatabase db = getWritableDatabase();
 		ContentValues cv = new ContentValues();
 		cv.put("state",file.state);
-		db.update("filelist",cv,"_id = ? ",new String[]{String.valueOf(file._id)});
+		cv.put("fileTime",file.fileTime);
+		db.update("filelist", cv, "_id = ? ", new String[]{String.valueOf(file._id)});
 		db.close();
 //		db.execSQL("update note set title=?,content=? where _id=?",new String[]{note.title,note.content,note._id});
 	}
@@ -150,8 +151,16 @@ public class FileDao extends SQLiteOpenHelper {
      */
 	public FlashAirFile queryFlashAirFileById(FlashAirFile file){
 		SQLiteDatabase db = getWritableDatabase();
-		Cursor cursor = db.query("filelist",null,"planNo = ? and flashAirPath = ? and fileName = ? and fileTime = ? ",new String[]{String.valueOf(file.planNo),file.flashAirPath,file.fileName,String.valueOf(file.fileTime)},null,null,null);
-		if(!cursor.moveToNext())file = null;
+		Cursor cursor = db.query("filelist",null,"planNo = ? and flashAirPath = ? and fileName = ? ",new String[]{String.valueOf(file.planNo),file.flashAirPath,file.fileName},null,null,null);
+		if(cursor.moveToNext()){
+			long fileTime = cursor.getLong(cursor.getColumnIndex("fileTime"));
+			if(fileTime < file.fileTime){
+				file.state = FlashAirFile.STATE_UNLOAD;
+				file._id = cursor.getInt(cursor.getColumnIndex("_id"));
+			}
+		}else{
+			file = null;
+		}
 		cursor.close();
 		db.close();
 		return file;

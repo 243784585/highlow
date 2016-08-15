@@ -88,9 +88,12 @@ public class TransferActivity extends BaseActivity {
         public void handleMessage(Message msg) {
             // 2.  遍历下载清单
             List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
-            if(flashAirFiles != null){
+            if((flashAirFiles != null && flashAirFiles.size() > 1)||workFinish !=null){
                 //有可下载文件
                 workCount++;
+                if(workFinish == null) {
+                    flashAirFiles.remove(flashAirFiles.size() - 1);//移除最后一个,即最新的(有可能正在编辑的)
+                }
                 allFiles.addAll(flashAirFiles);
                 tv_count.setVisibility(View.VISIBLE);
                 tv_count.setText("总文件数："+allFiles.size());
@@ -218,6 +221,7 @@ public class TransferActivity extends BaseActivity {
     @Override
     protected void initListener() {}
 
+    private String workFinish;
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -225,13 +229,26 @@ public class TransferActivity extends BaseActivity {
                 new CommonDialog(this) {
                     @Override
                     protected void afterConfirm() {
-                        dismiss();
-                        finish();
+                        List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
+                        if(flashAirFiles != null){
+                            //有可下载文件
+                            state = 1;
+                            workFinish = "";
+                            if(NetworkUtil.isFlashAir(TransferActivity.this)) {
+                                workHandler.sendEmptyMessage(DOWN);
+                            }else{
+                                workHandler.sendEmptyMessage(SCAN);
+                            }
+                            dismiss();
+                        }else{
+                            dismiss();
+                            finish();
+                        }
                     }
-                }.setTitle("传输工作完成了吗?", R.color.black, 11f, TypedValue.COMPLEX_UNIT_SP)
+                }.setTitle(fileDao.queryFlashAirFileByUnDownload(null, planNo)!=null?"确认上传最后一个检测文件?请确认该检测文件为最终版本":"确定传输工作已完成?", R.color.black, 11f, TypedValue.COMPLEX_UNIT_SP)
                         .setButtonStyle(R.color.dialog_btn_color, 15f, TypedValue.COMPLEX_UNIT_SP)
-                        .setCancle("继续")
-                        .setConfirm("完成")
+                        .setCancle("继续工作")
+                        .setConfirm("确认上传")
                         .show();
                 break;
         }
@@ -361,7 +378,11 @@ public class TransferActivity extends BaseActivity {
                 return;
             }
 
-
+            if(workFinish != null){
+                finish();
+                ToastUtils.showTextToast("传输工作完成");
+                return;
+            }
             //当次全部上传完成
             state = 0;
             tv_upload.setText("已上传："+curUpload);

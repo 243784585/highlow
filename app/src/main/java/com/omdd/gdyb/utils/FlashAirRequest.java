@@ -57,6 +57,8 @@ public class FlashAirRequest
                             faf.state = FlashAirFile.STATE_UNLOAD;
                             faf.localPath = BaseApplication.downLoadPath + faf.flashAirPath;
                             TransferActivity.fileDao.saveFlashAirFile(faf);
+                        }else{
+                            TransferActivity.fileDao.updateFlashAirFile(faf);
                         }
                     }
                 }else{

@@ -48,6 +48,7 @@ public class FlashAirRequest
             long targetTime = Session.getLong(Session.KEY_TIME);
             for(int i = 1 , len = files.length ; i<len ; i++){
                 faf = new FlashAirFile(files[i]);
+                if("syslog.txt".equals(faf.fileName)||"PData.DAT".equals(faf.fileName))continue;
                 if(faf.fileName.contains(".")){
                     //文件
                     if(faf.fileTime > targetTime) {

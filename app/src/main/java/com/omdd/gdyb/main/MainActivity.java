@@ -53,7 +53,6 @@ public class MainActivity extends BaseActivity {
             //第一次进入应用
             startActivity(new Intent(this,SettingActivity.class).putExtra("theFirst",true));
             finish();
-            return;
         }
         super.onCreate(savedInstanceState);
     }

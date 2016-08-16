@@ -226,19 +226,18 @@ public class TransferActivity extends BaseActivity {
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.header_right:
+                if(workFinish != null){
+                    ToastUtils.showTextToast("请等待传输完成");
+                    return;
+                }
                 new CommonDialog(this) {
                     @Override
                     protected void afterConfirm() {
                         List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
                         if(flashAirFiles != null){
                             //有可下载文件
-                            state = 1;
                             workFinish = "";
-                            if(NetworkUtil.isFlashAir(TransferActivity.this)) {
-                                workHandler.sendEmptyMessage(DOWN);
-                            }else{
-                                workHandler.sendEmptyMessage(SCAN);
-                            }
+                            ToastUtils.showTextToast("请等待传输完成");
                             dismiss();
                         }else{
                             dismiss();

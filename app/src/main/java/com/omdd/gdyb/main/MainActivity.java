@@ -150,7 +150,7 @@ public class MainActivity extends BaseActivity {
                     ToastUtils.showTextToast("请先完成信息设置!");
                     return;
                 }
-                if(NetworkUtil.isFlashAir(this)){
+                if(NetworkUtil.isFlashAir(this,mWifiAdmin)){
                     mWifiAdmin.removeNetworkLink(mWifiAdmin.getCurrentNetId());
                 }
                 startActivityForResult(new Intent(this,ProjectActivity.class),110);

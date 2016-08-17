@@ -40,6 +40,7 @@ public class BaseApplication extends Application {
 
         File file = new File(downLoadPath = DateUtil.getFilePath());
         if(!file.exists()) file.mkdirs();
+        CrashHandler.getInstance().init(this);
     }
 
     /** 获取工作线程轮询器 */

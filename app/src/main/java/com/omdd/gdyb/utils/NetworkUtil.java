@@ -92,13 +92,13 @@ public class NetworkUtil {
      * @param context
      * @return
      */
-    public static boolean isFlashAir(Context context){
+    public static boolean isFlashAir(Context context,WifiAdmin admin){
         if(context == null)throw new IllegalArgumentException("context为空");
 
         NetworkInfo info = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE))
                 .getActiveNetworkInfo();
 
-        return info == null ? false:Constant.WIFI_SSID.equals(info.getExtraInfo().replace("\"",""));
+        return info == null ? false:info.getType()==1?Constant.WIFI_SSID.equals(admin.getSSID().replace("\"","")):false;
     }
 
 }

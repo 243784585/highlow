@@ -106,7 +106,7 @@ public class TransferActivity extends BaseActivity {
                 emptyView.setText("FlashAir暂时没有"+new SimpleDateFormat("yyyy-MM-dd").format(Session.getLong(Session.KEY_TIME))+"之后的文件,请按返回键退出或继续等待");
                 //所有文件传输工作完成
                 state = 0;
-                if(NetworkUtil.isFlashAir(TransferActivity.this)) {
+                if(NetworkUtil.isFlashAir(TransferActivity.this,mWifiAdmin)) {
                     workHandler.sendEmptyMessage(DOWN);
                 }else{
                     workHandler.sendEmptyMessage(SCAN);
@@ -129,19 +129,22 @@ public class TransferActivity extends BaseActivity {
             }
         }
     };
+    private boolean scan;
 
     /**
      * 开始扫描设备热点
      */
     private void startScanFlashAir(){
+        if(scan)return;
+        scan = true;
         mWifiAdmin.openWifi();
-        boolean flag = true;
-        while (flag) {
+        while (scan) {
             mWifiAdmin.startScan();
-            if (mWifiAdmin.getWifiList().size() == 0) continue;
+            if (mWifiAdmin.getWifiList() == null || mWifiAdmin.getWifiList().size() == 0) continue;
             for (ScanResult scanRes : mWifiAdmin.getWifiList()) {
                 if (scanRes.SSID.replace("\"","").equals(Constant.WIFI_SSID)) {
                     mWifiAdmin.addNetWordLink(mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3));
+                    scan = false;
                     return;
                 }
             }
@@ -208,7 +211,7 @@ public class TransferActivity extends BaseActivity {
     protected void initData() {
         mWifiAdmin = new WifiAdmin(this);
         fileDao = new FileDao(this, 1);
-        if(NetworkUtil.isFlashAir(this)) {
+        if(NetworkUtil.isFlashAir(this,mWifiAdmin)) {
             //已连接上设备
             workHandler.sendEmptyMessage(DOWN);
         }else{
@@ -259,6 +262,7 @@ public class TransferActivity extends BaseActivity {
         unregisterReceiver(netReceiver);
         fileDao.close();
         fileDao = null;
+        scan  = false;
     }
 
     /** 开启下载 */
@@ -511,7 +515,7 @@ public class TransferActivity extends BaseActivity {
             if (info != null && info.isAvailable()) {
                 switch (info.getType()) {
                     case ConnectivityManager.TYPE_WIFI:
-                        if (Constant.WIFI_SSID.equals(info.getExtraInfo().replace("\"",""))) {
+                        if (Constant.WIFI_SSID.equals(mWifiAdmin.getSSID().replace("\"",""))) {
                             //连接上Flashair设备
                             workHandler.sendEmptyMessage(DOWN);
                         }

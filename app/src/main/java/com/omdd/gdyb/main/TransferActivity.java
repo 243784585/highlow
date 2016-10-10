@@ -213,7 +213,7 @@ public class TransferActivity extends BaseActivity {
 
 
         /** 空视图 */
-        emptyView = new TextView(TransferActivity.this);
+        emptyView = new TextView(this);
         emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         emptyView.setText("FlashAir设备暂无" + DateUtil.format(Session.getLong(Session.KEY_TIME)) + "的文件");
         emptyView.setGravity(Gravity.CENTER);
@@ -261,11 +261,10 @@ public class TransferActivity extends BaseActivity {
                             //有可下载文件
                             workFinish = "";
                             ToastUtils.showTextToast("请等待传输完成");
-                            dismiss();
                         } else {
-                            dismiss();
                             finish();
                         }
+                        dismiss();
                     }
                 }.setTitle(fileDao.queryFlashAirFileByUnDownload(null, planNo) != null ? "确认上传最后一个检测文件?请确认该检测文件为最终版本" : "确定传输工作已完成?", R.color.black, 11f, TypedValue.COMPLEX_UNIT_SP)
                         .setButtonStyle(R.color.dialog_btn_color, 15f, TypedValue.COMPLEX_UNIT_SP)
@@ -291,7 +290,7 @@ public class TransferActivity extends BaseActivity {
     private void startDownLoad() {
         //3.下载
         for (int i = curDown, len = allFiles.size(); i < len; i++) {
-            downs.add(new AsyncDown(TransferActivity.this));
+            downs.add(new AsyncDown(this));
         }
         downs.get(curDown).execute(allFiles.get(curDown));
         ((MyAdapter) lv_transfer.getAdapter()).notifyDataSetChanged();
@@ -358,7 +357,7 @@ public class TransferActivity extends BaseActivity {
             //全部下载完成,上传开始
             state++;
             for (int i = curUpload, len = allFiles.size(); i < len; i++) {
-                uploads.add(new AsyncUpload(TransferActivity.this));
+                uploads.add(new AsyncUpload(this));
             }
             uploads.get(curUpload).execute(allFiles.get(curUpload));
             ((MyAdapter) lv_transfer.getAdapter()).notifyDataSetChanged();
@@ -426,7 +425,29 @@ public class TransferActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
+        if (workFinish != null) {
+            ToastUtils.showTextToast("请等待传输完成");
+            return;
+        }
+        final boolean hasFile = fileDao.queryFlashAirFileByUnDownload(null, planNo) != null;
         new CommonDialog(this) {
+            @Override
+            protected void afterConfirm() {
+                if (hasFile) {
+                    //有可下载文件
+                    workFinish = "";
+                    ToastUtils.showTextToast("请等待传输完成");
+                } else {
+                    finish();
+                }
+                dismiss();
+            }
+        }.setTitle(hasFile ? "确认上传最后一个检测文件?请确认该检测文件为最终版本" : "确定传输工作已完成?", R.color.black, 11f, TypedValue.COMPLEX_UNIT_SP)
+                .setButtonStyle(R.color.dialog_btn_color, 15f, TypedValue.COMPLEX_UNIT_SP)
+                .setCancle(hasFile?"继续工作":"取消")
+                .setConfirm(hasFile?"确认上传":"确定")
+                .show();
+        /*new CommonDialog(this) {
             @Override
             protected void afterConfirm() {
                 dismiss();
@@ -436,8 +457,7 @@ public class TransferActivity extends BaseActivity {
                 .setButtonStyle(R.color.dialog_btn_color, 15f, TypedValue.COMPLEX_UNIT_SP)
                 .setCancle("取消")
                 .setConfirm("确定")
-                .show();
-        return;
+                .show();*/
     }
 
     //String guid, String planNo, String pileNo,String fileName, String dataType,

@@ -2,19 +2,14 @@ package com.omdd.gdyb.utils.download;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.omdd.gdyb.bean.FlashAirFile;
 import com.omdd.gdyb.main.TransferActivity;
-import com.omdd.gdyb.utils.CommonUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -39,7 +34,8 @@ public class AsyncDown extends AsyncTask<FlashAirFile,Integer,Integer> {
      */
     @Override
     protected Integer doInBackground(FlashAirFile... params) {
-
+        //已下载直接返回
+        if(params[0].state == FlashAirFile.STATE_LOADED)return null;
         FileOutputStream fo = null;
         InputStream inputStream = null;
         File file = null;

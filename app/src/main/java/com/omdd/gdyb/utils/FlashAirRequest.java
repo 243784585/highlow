@@ -78,7 +78,11 @@ public class FlashAirRequest
         {
             Log.e("ERROR", "ERROR: " + e.toString());
             e.printStackTrace();
-        } finally {
+        }
+        catch (Exception e){
+            Log.e("ERROR", "ERROR: " + e.toString());
+            e.printStackTrace();
+        }finally {
             try {
                 if(bufreader != null)
                     bufreader.close();

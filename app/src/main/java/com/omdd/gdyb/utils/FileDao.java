@@ -1,7 +1,4 @@
 package com.omdd.gdyb.utils;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -11,7 +8,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.omdd.gdyb.bean.FlashAirFile;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class FileDao extends SQLiteOpenHelper {
+
+	private AtomicInteger mOpenCounter = new AtomicInteger();
+	private SQLiteDatabase db;
 
 	public FileDao(Context context, String name, CursorFactory factory,
 			int version) {
@@ -32,9 +36,23 @@ public class FileDao extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase arg0, int arg1, int arg2) {
 
 	}
+
+	public synchronized SQLiteDatabase openDatabase() {
+		if(mOpenCounter.incrementAndGet() == 1) {
+			// Opening new database
+			db = getWritableDatabase();
+		}
+		return db;
+	}
+
+	public synchronized void closeDatabase() {
+		if(mOpenCounter.decrementAndGet() == 0) {
+			// Closing database
+			db.close();
+		}
+	}
 	
-	public void saveFlashAirFile(FlashAirFile file){
-		SQLiteDatabase db = getWritableDatabase();
+	public synchronized void saveFlashAirFile(FlashAirFile file){
 		ContentValues cv = new ContentValues();
 		cv.put("planNo",file.planNo);
 		cv.put("fileName",file.fileName);
@@ -43,15 +61,14 @@ public class FileDao extends SQLiteOpenHelper {
 		cv.put("size",file.size);
 		cv.put("state",file.state);
 		cv.put("fileTime",file.fileTime);
-		db.insert("filelist",null,cv);
+		openDatabase().insert("filelist",null,cv);
 //		db.execSQL("insert into filelist(planNo,fileName,localPath,flashAirPath,size,state,fileTime) values(?,?,?,?,?,?,?)",
 //				new Object[]{file.planNo,file.fileName,file.localPath,file.flashAirPath,file.size,file.state,file.fileTime});
-		db.close();
+		closeDatabase();
 	}
 	
-	public List<FlashAirFile> queryFlashAirFileByUnDownload(List<FlashAirFile> files,String planNo){
-		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.rawQuery("select * from filelist where planNo = ? and (state = ? or state = ? or state = ?)", new String[]{planNo,String.valueOf(FlashAirFile.STATE_UNLOAD),String.valueOf(FlashAirFile.STATE_LOADFAILED),String.valueOf(FlashAirFile.STATE_UPFAILED)});
+	public synchronized List<FlashAirFile> queryFlashAirFileByUnDownload(List<FlashAirFile> files,String planNo){
+		Cursor cursor = openDatabase().rawQuery("select * from filelist where planNo = ? and (state = ? or state = ? or state = ? or state = ?)", new String[]{planNo,String.valueOf(FlashAirFile.STATE_UNLOAD),String.valueOf(FlashAirFile.STATE_LOADFAILED),String.valueOf(FlashAirFile.STATE_UPFAILED),String.valueOf(FlashAirFile.STATE_LOADED)});
 		
 		if(files == null)
 			files = new ArrayList<FlashAirFile>();
@@ -73,7 +90,7 @@ public class FileDao extends SQLiteOpenHelper {
 			);
 		}
 		cursor.close();
-		db.close();
+		closeDatabase();
 		return files.isEmpty() ? null:files;
 	}
 
@@ -83,9 +100,8 @@ public class FileDao extends SQLiteOpenHelper {
 	 * @param planNo
      * @return
      */
-	public List<FlashAirFile> queryFlashAirFileByPlanNo(List<FlashAirFile> files,int planNo){
-		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.rawQuery("select * from filelist where planNo = ?", new String[]{String.valueOf(planNo)});
+	public synchronized List<FlashAirFile> queryFlashAirFileByPlanNo(List<FlashAirFile> files,int planNo){
+		Cursor cursor = openDatabase().rawQuery("select * from filelist where planNo = ?", new String[]{String.valueOf(planNo)});
 
 		if(files == null)
 			files = new ArrayList<FlashAirFile>();
@@ -107,14 +123,13 @@ public class FileDao extends SQLiteOpenHelper {
 			);
 		}
 		cursor.close();
-		db.close();
+		closeDatabase();
 		return files.isEmpty() ? null:files;
 	}
 
-	public List<FlashAirFile> queryAll(){
+	public synchronized List<FlashAirFile> queryAll(){
 		List<FlashAirFile> infos = new ArrayList<>();
-		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.rawQuery("select * from filelist",null);
+		Cursor cursor = openDatabase().rawQuery("select * from filelist",null);
 		while(cursor.moveToNext()){
 					infos.add(new FlashAirFile(
 							cursor.getInt(cursor.getColumnIndex("_id")),//_id
@@ -128,19 +143,18 @@ public class FileDao extends SQLiteOpenHelper {
 					));
 		}
 		cursor.close();
-		db.close();
+		closeDatabase();
 		return infos;
 	}
 
 
 	
-	public void updateFlashAirFile(FlashAirFile file){
-		SQLiteDatabase db = getWritableDatabase();
+	public synchronized void updateFlashAirFile(FlashAirFile file){
 		ContentValues cv = new ContentValues();
 		cv.put("state",file.state);
 		cv.put("fileTime",file.fileTime);
-		db.update("filelist", cv, "_id = ? ", new String[]{String.valueOf(file._id)});
-		db.close();
+		openDatabase().update("filelist", cv, "_id = ? ", new String[]{String.valueOf(file._id)});
+		closeDatabase();
 //		db.execSQL("update note set title=?,content=? where _id=?",new String[]{note.title,note.content,note._id});
 	}
 
@@ -149,9 +163,8 @@ public class FileDao extends SQLiteOpenHelper {
 	 * @param file
 	 * @return 有记录返回传入对象,无记录返回null
      */
-	public FlashAirFile queryFlashAirFileById(FlashAirFile file){
-		SQLiteDatabase db = getWritableDatabase();
-		Cursor cursor = db.query("filelist",null,"planNo = ? and flashAirPath = ? and fileName = ? ",new String[]{String.valueOf(file.planNo),file.flashAirPath,file.fileName},null,null,null);
+	public synchronized FlashAirFile queryFlashAirFileById(FlashAirFile file){
+		Cursor cursor = openDatabase().query("filelist",null,"planNo = ? and flashAirPath = ? and fileName = ? ",new String[]{String.valueOf(file.planNo),file.flashAirPath,file.fileName},null,null,null);
 		if(cursor.moveToNext()){
 			long fileTime = cursor.getLong(cursor.getColumnIndex("fileTime"));
 			if(fileTime < file.fileTime){
@@ -162,16 +175,16 @@ public class FileDao extends SQLiteOpenHelper {
 			file = null;
 		}
 		cursor.close();
-		db.close();
+		closeDatabase();
 		return file;
 	}
 
 	/**
 	 * 清空表中数据
 	 */
-	public void clearData(){
-		SQLiteDatabase db = getWritableDatabase();
-		db.delete("filelist",null,null);
+	public synchronized void clearData(){
+		openDatabase().delete("filelist",null,null);
+		closeDatabase();
 	}
 
 }

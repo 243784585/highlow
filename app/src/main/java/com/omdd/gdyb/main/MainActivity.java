@@ -3,7 +3,6 @@ package com.omdd.gdyb.main;
 
 import android.content.Intent;
 import android.graphics.Paint;
-
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,14 +16,12 @@ import com.omdd.gdyb.R;
 import com.omdd.gdyb.base.BaseActivity;
 import com.omdd.gdyb.bean.ProjectInfo;
 import com.omdd.gdyb.utils.DateUtil;
-import com.omdd.gdyb.utils.FileDao;
 import com.omdd.gdyb.utils.NetworkUtil;
 import com.omdd.gdyb.utils.Session;
 import com.omdd.gdyb.utils.SessionValidate;
 import com.omdd.gdyb.utils.ToastUtils;
 import com.omdd.gdyb.utils.WifiAdmin;
 import com.omdd.pickerview.TimePickerView;
-
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -150,7 +147,7 @@ public class MainActivity extends BaseActivity {
                     ToastUtils.showTextToast("请先完成信息设置!");
                     return;
                 }
-                if(NetworkUtil.isFlashAir(this,mWifiAdmin)){
+                if(NetworkUtil.isFlashAir(this,mWifiAdmin = new WifiAdmin(this))){
                     mWifiAdmin.removeNetworkLink(mWifiAdmin.getCurrentNetId());
                 }
                 startActivityForResult(new Intent(this,ProjectActivity.class),110);

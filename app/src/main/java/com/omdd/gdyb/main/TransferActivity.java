@@ -17,17 +17,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.omdd.gdyb.R;
 import com.omdd.gdyb.application.BaseApplication;
 import com.omdd.gdyb.base.BaseActivity;
 import com.omdd.gdyb.bean.FlashAirFile;
-import com.omdd.gdyb.bean.NameValuePair;
-import com.omdd.gdyb.bean.ProjectInfo;
 import com.omdd.gdyb.utils.CommonDialog;
-import com.omdd.gdyb.utils.CommonUtil;
 import com.omdd.gdyb.utils.Constant;
 import com.omdd.gdyb.utils.DateUtil;
 import com.omdd.gdyb.utils.FileDao;
@@ -37,7 +33,6 @@ import com.omdd.gdyb.utils.Session;
 import com.omdd.gdyb.utils.ToastUtils;
 import com.omdd.gdyb.utils.WifiAdmin;
 import com.omdd.gdyb.utils.download.AsyncDown;
-import com.omdd.gdyb.utils.soap.RequestHandler;
 import com.omdd.gdyb.utils.upload.AsyncUpload;
 
 import java.io.File;
@@ -98,7 +93,7 @@ public class TransferActivity extends BaseActivity {
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            // 2.  遍历下载清单
+            // 2.  遍历下载清单(包含已下载未上传的文件)
             List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
             if ((flashAirFiles != null && flashAirFiles.size() > 1) || workFinish != null) {
                 //有可下载文件
@@ -118,7 +113,7 @@ public class TransferActivity extends BaseActivity {
                 emptyView.setText("FlashAir暂时没有" + new SimpleDateFormat("yyyy-MM-dd").format(Session.getLong(Session.KEY_TIME)) + "之后的文件,请按返回键退出或继续等待");
                 //所有文件传输工作完成
                 state = 0;
-                if (NetworkUtil.isFlashAir(TransferActivity.this, mWifiAdmin)) {
+                if (NetworkUtil.isFlashAir(TransferActivity.this, mWifiAdmin = new WifiAdmin(TransferActivity.this))) {
                     workHandler.sendEmptyMessageDelayed(DOWN, 1000);
                 } else {
                     workHandler.sendEmptyMessage(SCAN);
@@ -302,6 +297,9 @@ public class TransferActivity extends BaseActivity {
     public void onDownLoaded() {
         ((MyAdapter) lv_transfer.getAdapter()).notifyDataSetChanged();
         if (isFailed) {
+            if(!NetworkUtil.isFlashAir(this, mWifiAdmin)){
+                workHandler.sendEmptyMessage(SCAN);
+            }
             int position = failed.get(0);
             if (allFiles.get(position).state == FlashAirFile.STATE_LOADFAILED) {
                 //失败之后,仍然失败
@@ -569,7 +567,7 @@ public class TransferActivity extends BaseActivity {
             if (info != null && info.isAvailable()) {
                 switch (info.getType()) {
                     case ConnectivityManager.TYPE_WIFI:
-                        if (Constant.WIFI_SSID.equals(mWifiAdmin.getSSID().replace("\"", ""))) {
+                        if (Constant.WIFI_SSID.equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", ""))) {
                             //连接上Flashair设备
                             workHandler.sendEmptyMessage(DOWN);
                         }

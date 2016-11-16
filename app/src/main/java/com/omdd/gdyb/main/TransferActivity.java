@@ -170,7 +170,7 @@ public class TransferActivity extends BaseActivity {
      */
     private void initDownloadList() {
         if (state == 0) {
-            state++;
+            nextStep();
             FlashAirRequest.initDownloadList(Constant.FA_CMD_GETFILELIST + Constant.PATH);
             handler.sendEmptyMessage(0);
         }
@@ -339,7 +339,7 @@ public class TransferActivity extends BaseActivity {
 
             //4.下载完成回调,若成功则断开设备,准备上传
             //下载完成
-            state++;//2
+            nextStep();//2
 //            mWifiAdmin.closeWifi();
             mWifiAdmin.closeWifi();//关闭FlashAir设备wifi
             return;
@@ -353,7 +353,7 @@ public class TransferActivity extends BaseActivity {
     private void startUpload() {
         if (state == 2) {
             //全部下载完成,上传开始
-            state++;
+            nextStep();
             for (int i = curUpload, len = allFiles.size(); i < len; i++) {
                 uploads.add(new AsyncUpload(this));
             }
@@ -412,13 +412,24 @@ public class TransferActivity extends BaseActivity {
                 return;
             }
             //当次全部上传完成
-            state = 0;
+            nextStep();
             tv_upload.setText("已上传：" + curUpload);
             workHandler.sendEmptyMessage(SCAN);//开启扫描,连接设备
             return;
         }
         tv_upload.setText("已上传：" + curUpload);
         uploads.get(curUpload).execute(allFiles.get(curUpload));
+    }
+
+    /**
+     * 流程控制方法
+     * 0:等待状态(没有需要上传下载的文件)
+     * 1:正在下载中的状态
+     * 2:所有文件下载完成的状态
+     * 3:正在上传中的状态
+     * */
+    private synchronized void nextStep(){
+        state=++state%4;
     }
 
     @Override

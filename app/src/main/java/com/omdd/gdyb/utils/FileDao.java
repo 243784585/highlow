@@ -1,4 +1,5 @@
 package com.omdd.gdyb.utils;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -68,7 +69,8 @@ public class FileDao extends SQLiteOpenHelper {
 	}
 	
 	public synchronized List<FlashAirFile> queryFlashAirFileByUnDownload(List<FlashAirFile> files,String planNo){
-		Cursor cursor = openDatabase().rawQuery("select * from filelist where planNo = ? and (state = ? or state = ? or state = ? or state = ?)", new String[]{planNo,String.valueOf(FlashAirFile.STATE_UNLOAD),String.valueOf(FlashAirFile.STATE_LOADFAILED),String.valueOf(FlashAirFile.STATE_UPFAILED),String.valueOf(FlashAirFile.STATE_LOADED)});
+		if(planNo == null)return null;
+		Cursor cursor = openDatabase().rawQuery("select * from filelist where planNo = ? and (state = ? or state = ? or state = ? or state = ? or state = ?) and fileTime > ?", new String[]{planNo,String.valueOf(FlashAirFile.STATE_UNLOAD),String.valueOf(FlashAirFile.STATE_LOADFAILED),String.valueOf(FlashAirFile.STATE_UPFAILED),String.valueOf(FlashAirFile.STATE_LOADED),String.valueOf(FlashAirFile.STATE_UPLOADING),String.valueOf(Session.getLong(Session.KEY_TIME))});
 		
 		if(files == null)
 			files = new ArrayList<FlashAirFile>();

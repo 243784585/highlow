@@ -28,7 +28,7 @@ public abstract class BaseActivity extends AppCompatActivity implements View.OnC
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setActionBar();
 		initView();
-		initData();
+		initData(savedInstanceState);
 		initListener();
 	}
 
@@ -88,7 +88,7 @@ public abstract class BaseActivity extends AppCompatActivity implements View.OnC
 	 */
 	protected abstract void initView();
 
-	protected abstract void initData();
+	protected abstract void initData(Bundle outState);
 
 	/**
 	 * 各种事件

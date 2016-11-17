@@ -101,7 +101,7 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
-    protected void initData() {
+    protected void initData(Bundle outState) {
         tv_date.setText(date.format(new Date()));
         tv_date.getPaint().setFlags(Paint.UNDERLINE_TEXT_FLAG);
         sp_datatype.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,dataType));
@@ -132,7 +132,8 @@ public class MainActivity extends BaseActivity {
             case R.id.header_right:
                 //信息设置
                 startActivity(new Intent(this,SettingActivity.class));
-//                new FileDao(this,1).queryAll();
+//                Log.e("ERROR",Arrays.toString(new FileDao(this,1).queryAll().toArray()));
+//                Log.e("ERROR", Arrays.toString(new FileDao(this,1).queryFlashAirFileByUnDownload(null,"140222001").toArray()));
 //                new FileDao(this,1).clearData();
 //                ToastUtils.showTextToast(String.valueOf(NetworkUtil.isFlashAir(this)));
                 break;
@@ -167,7 +168,7 @@ public class MainActivity extends BaseActivity {
 
     /** 点击开始传输时,执行 */
     private void startWork(){
-        if(info == null){
+        if(info == null || info.planNo == null){
             ToastUtils.showTextToast("请选择检测工程");
             return;
         }

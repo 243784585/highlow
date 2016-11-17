@@ -1,6 +1,7 @@
 package com.omdd.gdyb.main;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
@@ -68,7 +69,7 @@ public class SettingActivity extends BaseActivity {
         findViewById(R.id.btn_save).setOnClickListener(this);
     }
 
-    protected void initData(){
+    protected void initData(Bundle outState){
         theFirst = getIntent().getBooleanExtra("theFirst",false);
         if(theFirst){
             myHeader.headerLeft.setVisibility(View.INVISIBLE);

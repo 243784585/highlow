@@ -2,6 +2,7 @@ package com.omdd.gdyb.main;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Gravity;
@@ -96,7 +97,7 @@ public class ProjectActivity extends BaseActivity implements PullToRefreshBase.O
     }
 
     @Override
-    protected void initData() {
+    protected void initData(Bundle outState) {
 //        myHeader.headerLeft.setVisibility(View.INVISIBLE);
         reqHan.setParams(Constant.METHOD_GETPLANLIST,params);
 

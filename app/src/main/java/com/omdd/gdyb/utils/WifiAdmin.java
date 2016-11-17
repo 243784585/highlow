@@ -6,6 +6,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
+import android.util.Log;
 
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class WifiAdmin {
 
     // 我本来是写在构造函数中了，但是考虑到不是每次都会使用Wifi锁，所以干脆自己建立一个方法！需要时调用，建立就OK
     public void createWifiLock() {
-        wifiLock = wifiManager.createWifiLock("flyfly"); // 创建一个锁的标志
+        wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF,"flyfly"); // 创建一个锁的标志
     }
 
     // 扫描网络

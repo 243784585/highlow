@@ -8,9 +8,11 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -94,6 +96,7 @@ public class TransferActivity extends BaseActivity {
         @Override
         public void handleMessage(Message msg) {
             // 2.  遍历下载清单(包含已下载未上传的文件)
+            if(fileDao==null)return;
             List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
             if ((flashAirFiles != null && flashAirFiles.size() > 1) || workFinish != null) {
                 //有可下载文件
@@ -113,7 +116,7 @@ public class TransferActivity extends BaseActivity {
                 emptyView.setText("FlashAir暂时没有" + new SimpleDateFormat("yyyy-MM-dd").format(Session.getLong(Session.KEY_TIME)) + "之后的文件,请按返回键退出或继续等待");
                 //所有文件传输工作完成
                 state = 0;
-                if (NetworkUtil.isFlashAir(TransferActivity.this, mWifiAdmin = new WifiAdmin(TransferActivity.this))) {
+                if (NetworkUtil.isFlashAir(TransferActivity.this, new WifiAdmin(TransferActivity.this))) {
                     workHandler.sendEmptyMessageDelayed(DOWN, 1000);
                 } else {
                     workHandler.sendEmptyMessage(SCAN);
@@ -201,7 +204,6 @@ public class TransferActivity extends BaseActivity {
         //监听网络状态的广播接收者
         registerReceiver(netReceiver = new NetReceiver(), new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
 
-
         lv_transfer = (ListView) findViewById(R.id.lv_transfer);
         lv_transfer.setAdapter(new MyAdapter());
         myHeader.headerLeft.setVisibility(View.INVISIBLE);
@@ -221,8 +223,13 @@ public class TransferActivity extends BaseActivity {
     }
 
     @Override
-    protected void initData() {
+    protected void initData(Bundle outState) {
+        if(outState !=null){
+            planNo = outState.getString("planNo");
+        }
         mWifiAdmin = new WifiAdmin(this);
+        mWifiAdmin.createWifiLock();//创建wifi锁
+        mWifiAdmin.lockWifi();//锁定wifi
         fileDao = new FileDao(this, 1);
         if (NetworkUtil.isFlashAir(this, mWifiAdmin)) {
             //已连接上设备
@@ -241,9 +248,16 @@ public class TransferActivity extends BaseActivity {
     private String workFinish;
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("planNo", planNo);
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.header_right:
+                Log.e("ERROR","right");
                 if (workFinish != null) {
                     ToastUtils.showTextToast("请等待传输完成");
                     return;
@@ -253,6 +267,7 @@ public class TransferActivity extends BaseActivity {
                     protected void afterConfirm() {
                         List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
                         if (flashAirFiles != null) {
+                            Log.e("ERROR","right:workFinish");
                             //有可下载文件
                             workFinish = "";
                             ToastUtils.showTextToast("请等待传输完成");
@@ -274,6 +289,7 @@ public class TransferActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(netReceiver);
+        mWifiAdmin.unLockWifi();
         fileDao.close();
         fileDao = null;
         scan = false;
@@ -340,8 +356,7 @@ public class TransferActivity extends BaseActivity {
             //4.下载完成回调,若成功则断开设备,准备上传
             //下载完成
             nextStep();//2
-//            mWifiAdmin.closeWifi();
-            mWifiAdmin.closeWifi();//关闭FlashAir设备wifi
+            mWifiAdmin.closeWifi();
             return;
         }
         downs.get(curDown).execute(allFiles.get(curDown));//开启下一个下载任务
@@ -434,6 +449,7 @@ public class TransferActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
+        Log.e("ERROR","onBackPressed");
         if (workFinish != null) {
             ToastUtils.showTextToast("请等待传输完成");
             return;
@@ -443,6 +459,7 @@ public class TransferActivity extends BaseActivity {
             @Override
             protected void afterConfirm() {
                 if (hasFile) {
+                    Log.e("ERROR","backPressed:workFinish");
                     //有可下载文件
                     workFinish = "";
                     ToastUtils.showTextToast("请等待传输完成");
@@ -582,6 +599,9 @@ public class TransferActivity extends BaseActivity {
                             //连接上Flashair设备
                             workHandler.sendEmptyMessage(DOWN);
                         }
+                        /*if("hs001".equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", "")) || "hs002".equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", ""))){
+                            startUpload();
+                        }*/
                         break;
                     case ConnectivityManager.TYPE_MOBILE:
                         //手机网络,上传文件到服务器

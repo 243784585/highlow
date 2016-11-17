@@ -70,4 +70,19 @@ public class FlashAirFile implements Serializable {
     public String getPostfix(){
         return fileName.substring(fileName.indexOf("."));
     }
+
+    @Override
+    public String toString() {
+        return "FlashAirFile{" +
+                "_id=" + _id +
+                ", pileNo='" + pileNo + '\'' +
+                ", planNo='" + planNo + '\'' +
+                ", localPath='" + localPath + '\'' +
+                ", flashAirPath='" + flashAirPath + '\'' +
+                ", fileName='" + fileName + '\'' +
+                ", size=" + size +
+                ", fileTime=" + fileTime +
+                ", state=" + state +
+                '}';
+    }
 }

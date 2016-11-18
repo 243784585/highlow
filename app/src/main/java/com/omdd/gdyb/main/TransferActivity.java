@@ -51,6 +51,7 @@ public class TransferActivity extends BaseActivity {
     public static FileDao fileDao;
     final int SCAN = 0x001;
     final int DOWN = 0x002;
+    final int CONNECT = 0x003;
     /**
      * 当前处于的状态(流程控制,解决网络状态接受者被重复调用的问题)
      * 0:等待状态 ->1
@@ -95,8 +96,9 @@ public class TransferActivity extends BaseActivity {
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
+            Log.e("ERROR", "handler::handleMessage:: START =============");
             // 2.  遍历下载清单(包含已下载未上传的文件)
-            if(fileDao==null)return;
+            if (fileDao == null) return;
             List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
             if ((flashAirFiles != null && flashAirFiles.size() > 1) || workFinish != null) {
                 //有可下载文件
@@ -113,15 +115,18 @@ public class TransferActivity extends BaseActivity {
                 tv_upload.setText("已上传：" + curUpload);
                 startDownLoad();
             } else {
+                Log.e("ERROR", "handler::handleMessage:: no file available for download =============");
                 emptyView.setText("FlashAir暂时没有" + new SimpleDateFormat("yyyy-MM-dd").format(Session.getLong(Session.KEY_TIME)) + "之后的文件,请按返回键退出或继续等待");
                 //所有文件传输工作完成
                 state = 0;
                 if (NetworkUtil.isFlashAir(TransferActivity.this, new WifiAdmin(TransferActivity.this))) {
+                    Log.e("ERROR", "handler::handleMessage:: WIFI connected, check for download again =============");
                     workHandler.sendEmptyMessageDelayed(DOWN, 1000);
                 } else {
                     workHandler.sendEmptyMessage(SCAN);
                 }
             }
+            Log.e("ERROR", "handler::handleMessage:: END =============");
         }
     };
 
@@ -136,6 +141,13 @@ public class TransferActivity extends BaseActivity {
                     //   1.初始化下载清单
                     initDownloadList();
                     break;
+                case CONNECT:
+                    Log.e("ERROR", "workHandler :: handleMessage :: CONNECT");
+                    if (!mWifiAdmin.addNetWordLink((WifiConfiguration) msg.obj)) {
+                        Log.e("ERROR", "workHandler :: handleMessage :: CONNECT FAILED");
+                        sendMessageDelayed(obtainMessage(CONNECT, msg.obj), 1000);
+                    }
+                    break;
             }
         }
     };
@@ -145,7 +157,11 @@ public class TransferActivity extends BaseActivity {
      * 开始扫描设备热点
      */
     private void startScanFlashAir() {
-        if (scan) return;
+        Log.e("ERROR", "startScanFlashAir:: executing :: "+scan);
+        if (scan) {
+            Log.e("ERROR", "startScanFlashAir:: scan == true, returning");
+            return;
+        }
         scan = true;
         mWifiAdmin.openWifi();
         while (scan) {
@@ -155,12 +171,25 @@ public class TransferActivity extends BaseActivity {
                 if (scanRes.SSID.replace("\"", "").equals(Constant.WIFI_SSID)) {
                     for (WifiConfiguration item : mWifiAdmin.getWifiConfigList()) {
                         if (item.SSID.replace("\"", "").equals(Constant.WIFI_SSID)) {
-                            mWifiAdmin.addNetWordLink(item);
+                            Log.e("ERROR", "startScanFlashAir:: connect");
                             scan = false;
+                            workHandler.sendMessage(workHandler.obtainMessage(CONNECT, item));
+                            /*if (!mWifiAdmin.addNetWordLink(item)) {
+                                // TODO limit number of retries
+                                startScanFlashAir();
+                                Log.e("ERROR", "startScanFlashAir:: reconnect");
+                            }*/
                             return;
                         }
                     }
-                    mWifiAdmin.addNetWordLink(mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3));
+                    workHandler.sendMessage(
+                            workHandler.obtainMessage(
+                                    CONNECT,
+                                    mWifiAdmin.addNetWordLink(
+                                            mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3)
+                                    )
+                            )
+                    );
                     scan = false;
                     return;
                 }
@@ -174,7 +203,9 @@ public class TransferActivity extends BaseActivity {
     private void initDownloadList() {
         if (state == 0) {
             nextStep();
+            Log.e("SUCCESS", "initDownloadList :: 初始化下载清单之前");
             FlashAirRequest.initDownloadList(Constant.FA_CMD_GETFILELIST + Constant.PATH);
+            Log.e("SUCCESS", "initDownloadList :: 初始化下载清单之后");
             handler.sendEmptyMessage(0);
         }
     }
@@ -224,7 +255,7 @@ public class TransferActivity extends BaseActivity {
 
     @Override
     protected void initData(Bundle outState) {
-        if(outState !=null){
+        if (outState != null) {
             planNo = outState.getString("planNo");
         }
         mWifiAdmin = new WifiAdmin(this);
@@ -233,9 +264,11 @@ public class TransferActivity extends BaseActivity {
         fileDao = new FileDao(this, 1);
         if (NetworkUtil.isFlashAir(this, mWifiAdmin)) {
             //已连接上设备
+            Log.e("Transfer", "initData :: 开始扫描下载清单---line:243");
             workHandler.sendEmptyMessage(DOWN);
         } else {
             //未连接上设备
+            Log.e("Transfer", "initData :: 开始扫描设备---line:247");
             emptyView.setText("正在连接FlashAir设备,请稍后...");
             workHandler.sendEmptyMessage(SCAN);
         }
@@ -257,7 +290,7 @@ public class TransferActivity extends BaseActivity {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.header_right:
-                Log.e("ERROR","right");
+                Log.e("ERROR", state == 0 ? "等待状态" : state == 1 ? "下载中" : state == 2 ? "下载完成" : "上传中");
                 if (workFinish != null) {
                     ToastUtils.showTextToast("请等待传输完成");
                     return;
@@ -267,9 +300,13 @@ public class TransferActivity extends BaseActivity {
                     protected void afterConfirm() {
                         List<FlashAirFile> flashAirFiles = fileDao.queryFlashAirFileByUnDownload(null, planNo);
                         if (flashAirFiles != null) {
-                            Log.e("ERROR","right:workFinish");
+                            Log.e("ERROR", "right:workFinish");
                             //有可下载文件
                             workFinish = "";
+                            if (!NetworkUtil.isFlashAir(TransferActivity.this, mWifiAdmin) && state == 0) {
+                                scan = false;
+                                workHandler.sendEmptyMessage(SCAN);
+                            }
                             ToastUtils.showTextToast("请等待传输完成");
                         } else {
                             finish();
@@ -299,6 +336,7 @@ public class TransferActivity extends BaseActivity {
      * 开启下载
      */
     private void startDownLoad() {
+        Log.e("ERROR", "开始下载");
         //3.下载
         for (int i = curDown, len = allFiles.size(); i < len; i++) {
             downs.add(new AsyncDown(this));
@@ -313,7 +351,7 @@ public class TransferActivity extends BaseActivity {
     public void onDownLoaded() {
         ((MyAdapter) lv_transfer.getAdapter()).notifyDataSetChanged();
         if (isFailed) {
-            if(!NetworkUtil.isFlashAir(this, mWifiAdmin)){
+            if (!NetworkUtil.isFlashAir(this, new WifiAdmin(this))) {
                 workHandler.sendEmptyMessage(SCAN);
             }
             int position = failed.get(0);
@@ -356,6 +394,7 @@ public class TransferActivity extends BaseActivity {
             //4.下载完成回调,若成功则断开设备,准备上传
             //下载完成
             nextStep();//2
+            Log.e("ERROR", "下载完成,关wifi,准备上传");
             mWifiAdmin.closeWifi();
             return;
         }
@@ -429,7 +468,10 @@ public class TransferActivity extends BaseActivity {
             //当次全部上传完成
             nextStep();
             tv_upload.setText("已上传：" + curUpload);
+            Log.e("ERROR", "上传完成!扫描开启");
+            scan = false;
             workHandler.sendEmptyMessage(SCAN);//开启扫描,连接设备
+//            mWifiAdmin.addNetWordLink(mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3));
             return;
         }
         tv_upload.setText("已上传：" + curUpload);
@@ -442,14 +484,14 @@ public class TransferActivity extends BaseActivity {
      * 1:正在下载中的状态
      * 2:所有文件下载完成的状态
      * 3:正在上传中的状态
-     * */
-    private synchronized void nextStep(){
-        state=++state%4;
+     */
+    private synchronized void nextStep() {
+        state = ++state % 4;
     }
 
     @Override
     public void onBackPressed() {
-        Log.e("ERROR","onBackPressed");
+        Log.e("ERROR", "onBackPressed");
         if (workFinish != null) {
             ToastUtils.showTextToast("请等待传输完成");
             return;
@@ -459,9 +501,13 @@ public class TransferActivity extends BaseActivity {
             @Override
             protected void afterConfirm() {
                 if (hasFile) {
-                    Log.e("ERROR","backPressed:workFinish");
+                    Log.e("ERROR", "backPressed:workFinish");
                     //有可下载文件
                     workFinish = "";
+                    if (!NetworkUtil.isFlashAir(TransferActivity.this, new WifiAdmin(TransferActivity.this)) && state == 0) {
+                        scan = false;
+                        workHandler.sendEmptyMessage(SCAN);
+                    }
                     ToastUtils.showTextToast("请等待传输完成");
                 } else {
                     finish();
@@ -470,8 +516,8 @@ public class TransferActivity extends BaseActivity {
             }
         }.setTitle(hasFile ? "确认上传最后一个检测文件?请确认该检测文件为最终版本" : "确定传输工作已完成?", R.color.black, 11f, TypedValue.COMPLEX_UNIT_SP)
                 .setButtonStyle(R.color.dialog_btn_color, 15f, TypedValue.COMPLEX_UNIT_SP)
-                .setCancle(hasFile?"继续工作":"取消")
-                .setConfirm(hasFile?"确认上传":"确定")
+                .setCancle(hasFile ? "继续工作" : "取消")
+                .setConfirm(hasFile ? "确认上传" : "确定")
                 .show();
         /*new CommonDialog(this) {
             @Override

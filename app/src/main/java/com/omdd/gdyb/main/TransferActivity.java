@@ -157,21 +157,29 @@ public class TransferActivity extends BaseActivity {
      * 开始扫描设备热点
      */
     private void startScanFlashAir() {
-        Log.e("ERROR", "startScanFlashAir:: executing :: "+scan);
+//        Log.e("ERROR", "startScanFlashAir:: executing :: " + scan);
         if (scan) {
-            Log.e("ERROR", "startScanFlashAir:: scan == true, returning");
+//            Log.e("ERROR", "startScanFlashAir:: scan == true, returning");
             return;
         }
         scan = true;
-        mWifiAdmin.openWifi();
+//        Log.e("ERROR", "startScanFlashAir:: openWifi");
+        while(!mWifiAdmin.openWifi()) {
+            // TODO retry
+            if(mWifiAdmin.isWifiEnabled()){
+                break;
+            }
+//            Log.e("ERROR", "startScanFlashAir:: retry opening WIFI");
+        }
         while (scan) {
+//            Log.e("ERROR", "startScanFlashAir:: startScan");
             mWifiAdmin.startScan();
             if (mWifiAdmin.getWifiList() == null || mWifiAdmin.getWifiList().size() == 0) continue;
             for (ScanResult scanRes : mWifiAdmin.getWifiList()) {
                 if (scanRes.SSID.replace("\"", "").equals(Constant.WIFI_SSID)) {
                     for (WifiConfiguration item : mWifiAdmin.getWifiConfigList()) {
                         if (item.SSID.replace("\"", "").equals(Constant.WIFI_SSID)) {
-                            Log.e("ERROR", "startScanFlashAir:: connect");
+//                            Log.e("ERROR", "startScanFlashAir:: connect");
                             scan = false;
                             workHandler.sendMessage(workHandler.obtainMessage(CONNECT, item));
                             /*if (!mWifiAdmin.addNetWordLink(item)) {
@@ -185,9 +193,7 @@ public class TransferActivity extends BaseActivity {
                     workHandler.sendMessage(
                             workHandler.obtainMessage(
                                     CONNECT,
-                                    mWifiAdmin.addNetWordLink(
-                                            mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3)
-                                    )
+                                    mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3)
                             )
                     );
                     scan = false;
@@ -195,6 +201,7 @@ public class TransferActivity extends BaseActivity {
                 }
             }
         }
+//        Log.e("ERROR", "startScanFlashAir:: end");
     }
 
     /**
@@ -203,9 +210,9 @@ public class TransferActivity extends BaseActivity {
     private void initDownloadList() {
         if (state == 0) {
             nextStep();
-            Log.e("SUCCESS", "initDownloadList :: 初始化下载清单之前");
+//            Log.e("SUCCESS", "initDownloadList :: 初始化下载清单之前");
             FlashAirRequest.initDownloadList(Constant.FA_CMD_GETFILELIST + Constant.PATH);
-            Log.e("SUCCESS", "initDownloadList :: 初始化下载清单之后");
+//            Log.e("SUCCESS", "initDownloadList :: 初始化下载清单之后");
             handler.sendEmptyMessage(0);
         }
     }
@@ -336,7 +343,7 @@ public class TransferActivity extends BaseActivity {
      * 开启下载
      */
     private void startDownLoad() {
-        Log.e("ERROR", "开始下载");
+//        Log.e("ERROR", "开始下载");
         //3.下载
         for (int i = curDown, len = allFiles.size(); i < len; i++) {
             downs.add(new AsyncDown(this));
@@ -394,7 +401,7 @@ public class TransferActivity extends BaseActivity {
             //4.下载完成回调,若成功则断开设备,准备上传
             //下载完成
             nextStep();//2
-            Log.e("ERROR", "下载完成,关wifi,准备上传");
+//            Log.e("ERROR", "下载完成,关wifi,准备上传");
             mWifiAdmin.closeWifi();
             return;
         }
@@ -468,7 +475,7 @@ public class TransferActivity extends BaseActivity {
             //当次全部上传完成
             nextStep();
             tv_upload.setText("已上传：" + curUpload);
-            Log.e("ERROR", "上传完成!扫描开启");
+//            Log.e("ERROR", "上传完成!扫描开启");
             scan = false;
             workHandler.sendEmptyMessage(SCAN);//开启扫描,连接设备
 //            mWifiAdmin.addNetWordLink(mWifiAdmin.CreateWifiInfo(Constant.WIFI_SSID, Constant.WIFI_PWD, 3));
@@ -491,7 +498,7 @@ public class TransferActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
-        Log.e("ERROR", "onBackPressed");
+//        Log.e("ERROR", "onBackPressed");
         if (workFinish != null) {
             ToastUtils.showTextToast("请等待传输完成");
             return;
@@ -641,6 +648,10 @@ public class TransferActivity extends BaseActivity {
             if (info != null && info.isAvailable()) {
                 switch (info.getType()) {
                     case ConnectivityManager.TYPE_WIFI:
+                        if(state == 3){
+                            mWifiAdmin.closeWifi();
+                            return;
+                        }
                         if (Constant.WIFI_SSID.equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", ""))) {
                             //连接上Flashair设备
                             workHandler.sendEmptyMessage(DOWN);

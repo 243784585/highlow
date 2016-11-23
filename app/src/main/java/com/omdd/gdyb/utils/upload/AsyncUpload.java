@@ -2,12 +2,9 @@ package com.omdd.gdyb.utils.upload;
 import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+
 import com.omdd.gdyb.bean.FlashAirFile;
 import com.omdd.gdyb.main.TransferActivity;
-import com.omdd.gdyb.utils.CommonUtil;
 import com.omdd.gdyb.utils.Constant;
 import com.omdd.gdyb.utils.Session;
 
@@ -36,6 +33,12 @@ public class AsyncUpload extends AsyncTask<FlashAirFile,Integer,Integer>{
 
     @Override
     protected Integer doInBackground(FlashAirFile... params) {
+        /*boolean flag = true;
+        if (flag) {
+            params[0].state = FlashAirFile.STATE_UPLOADED;
+            TransferActivity.fileDao.updateFlashAirFile(params[0]);
+            return null;
+        }*/
         SoapObject result= null;
         try {
             result = CallWebService(params[0]);//请求

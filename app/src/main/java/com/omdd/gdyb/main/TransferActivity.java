@@ -337,6 +337,12 @@ public class TransferActivity extends BaseActivity {
         fileDao.close();
         fileDao = null;
         scan = false;
+        downs.clear();
+        downs = null;
+        uploads.clear();
+        uploads = null;
+        allFiles.clear();
+        allFiles = null;
     }
 
     /**
@@ -642,33 +648,35 @@ public class TransferActivity extends BaseActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            //获取手机的连接服务管理器，这里是连接管理器类
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo info = cm.getActiveNetworkInfo();
-            if (info != null && info.isAvailable()) {
-                switch (info.getType()) {
-                    case ConnectivityManager.TYPE_WIFI:
-                        if(state == 3){
-                            mWifiAdmin.closeWifi();
-                            return;
-                        }
-                        if (Constant.WIFI_SSID.equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", ""))) {
-                            //连接上Flashair设备
-                            workHandler.sendEmptyMessage(DOWN);
-                        }
+            if (ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())) {
+                //获取手机的连接服务管理器，这里是连接管理器类
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo info = cm.getActiveNetworkInfo();
+                if (info != null && info.isAvailable()) {
+                    switch (info.getType()) {
+                        case ConnectivityManager.TYPE_WIFI:
+                            if (state == 3) {
+                                mWifiAdmin.closeWifi();
+                                return;
+                            }
+                            if (Constant.WIFI_SSID.equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", ""))) {
+                                //连接上Flashair设备
+                                workHandler.sendEmptyMessage(DOWN);
+                            }
                         /*if("hs001".equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", "")) || "hs002".equals(new WifiAdmin(getBaseContext()).getSSID().replace("\"", ""))){
                             startUpload();
                         }*/
-                        break;
-                    case ConnectivityManager.TYPE_MOBILE:
-                        //手机网络,上传文件到服务器
-                        startUpload();//开始上传
-                        break;
+                            break;
+                        case ConnectivityManager.TYPE_MOBILE:
+                            //手机网络,上传文件到服务器
+                            startUpload();//开始上传
+                            break;
+                    }
+                    return;
                 }
-                return;
-            }
-            //无网络
+                //无网络
 
+            }
         }
     }
 }
